@@ -4,6 +4,7 @@ import scala.io.Source
 import org.bson.types.ObjectId
 import com.foursquare.geocoderhw.boot.Boot
 import com.foursquare.geocoderhw.model.FeatureRecord
+import com.google.common.geometry.{S2CellId, S2LatLng}
 
 
 /* Chicago        4887398
@@ -240,12 +241,28 @@ object Indexer {
 
   def saveGeonamesFeatures(entries: Map[Long, GeocoderEntry]) {
     entries.foreach({ case (id, entry) => {
+      val s2Opt = for {
+        lat <- entry.geonamesEntry.latitude
+        lng <- entry.geonamesEntry.longitude
+      } yield {
+        S2CellId.fromLatLng(S2LatLng.fromDegrees(lat, lng))
+      }
+
+      val cellsOpt = s2Opt.map(s2 =>
+        (10 to 20).map(lvl => s2.parent(lvl).id).toList
+      )
+
       val rec = FeatureRecord.createRecord
         .id(entry.id)
         .names(entry.names.toList)
         .membership(entry.membership.flatMap(entries.get).map(_.id).distinct.toList)
         .preferred(entry.preferred)
         .abbreviated(entry.abbreviated)
+        .featureClass(entry.geonamesEntry.featureClass)
+        .featureCode(entry.geonamesEntry.featureCode)
+        .lat(entry.geonamesEntry.latitude)
+        .lng(entry.geonamesEntry.longitude)
+        .s2Cover(cellsOpt)
       rec.save(true)
     }})
 

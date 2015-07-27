@@ -15,6 +15,10 @@ import java.util.Date
 class FeatureRecord extends MongoRecord[FeatureRecord] with ObjectIdPk[FeatureRecord] {
   def meta = FeatureRecord
 
+  object lat extends DoubleField(this)
+
+  object lng extends DoubleField(this)
+
   object featureClass extends StringField(this, 1) {
     override def name = "fcl"
   }
@@ -38,6 +42,10 @@ class FeatureRecord extends MongoRecord[FeatureRecord] with ObjectIdPk[FeatureRe
   object names extends MongoListField[FeatureRecord, String](this) {
     override def name = "n"
   }
+
+  object s2Cover extends MongoListField[FeatureRecord, Long](this) {
+    override def name = "s2c"
+  }
 }
 
 object FeatureRecord extends FeatureRecord with MongoMetaRecord[FeatureRecord] with IndexedRecord[FeatureRecord] {
@@ -46,7 +54,8 @@ object FeatureRecord extends FeatureRecord with MongoMetaRecord[FeatureRecord] w
   override val mongoIndexList = List(
     FeatureRecord.index(_.id, Asc),
     FeatureRecord.index(_.membership, Asc),
-    FeatureRecord.index(_.names, Asc)
+    FeatureRecord.index(_.names, Asc),
+    FeatureRecord.index(_.s2Cover, Asc)
   )
 }
 
